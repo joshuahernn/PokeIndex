@@ -1,1 +1,5 @@
 fastapi[standard]
+beautifulsoup4>=4.12,<5
+requests
+pandas
+lxml
