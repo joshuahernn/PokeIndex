@@ -1,4 +1,4 @@
-
+from database import get_connection
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,3 +25,14 @@ def home():
 def health():
     return {"status": "ok"}
 
+@app.get("/api/health/database")
+def database_health():
+    with get_connection() as connection:
+        result = connection.execute(
+            "SELECT current_database()"
+        ).fetchone()
+
+    return {
+        "status": "connected",
+        "database": result[0],
+    }
