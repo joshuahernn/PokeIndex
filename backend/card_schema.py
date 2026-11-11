@@ -9,3 +9,6 @@ ENERGY = {
     'P': 'Psychic', 'F': 'Fighting', 'D': 'Darkness', 'M': 'Metal',
     'N': 'Dragon', 'C': 'Colorless', 'Y': 'Fairy'
 }
+TRAINER = {
+    'S': 'Supporter', 'I': 'Item', 'T': 'Stadium', 'O': 'Tool'
+}
