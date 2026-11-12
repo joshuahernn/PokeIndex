@@ -13,9 +13,29 @@ import parsing_pkmncards
 import parsing_limitlesstcg
 from card_schema import CARD_FIELDS
 
+import re
+from urllib.parse import urljoin, urlsplit, urldefrag
 
 # save the parsed cards in the same directory as the crawler
 PARSED_OUTPUT = Path('parsedOutput.csv')
+
+CARDS_PATH = re.compile(r'/cards/(?:en/)?[A-Za-z0-9-]+(?:/[A-Za-z0-9-]+)?/?')
+NOT_SETS = {'advanced', 'syntax'}
+
+
+def should_crawl(url):
+    parts = urlsplit(url)
+
+    if parts.hostname not in {'limitlesstcg.com', 'www.limitlesstcg.com'}:
+        return False
+
+    if parts.query:
+        return False
+
+    if not CARDS_PATH.fullmatch(parts.path):
+        return False
+
+    return parts.path.rstrip('/').split('/')[-1] not in NOT_SETS
 
 
 def write_parsed_cards(cards, output_path=None):
@@ -304,7 +324,7 @@ def redirect_urls(soup, url, cards):
         if href is not None:
             full_url = urljoin(url, href)
 
-            if full_url.startswith("http://") or full_url.startswith("https://"):
+            if should_crawl(full_url):
 
                 connections.append((url, full_url))
 
@@ -369,9 +389,9 @@ def redirect_urls(soup, url, cards):
 
                     if href is not None:
 
-                        new_url = urljoin(r.url, href)
+                        new_url = urldefrag(urljoin(r.url, href))[0]
 
-                        if new_url.startswith("https://") or new_url.startswith("http://"):
+                        if should_crawl(new_url):
 
                             connections.append((r.url, new_url))
 
@@ -399,7 +419,7 @@ def main():
 	# robots_cache = {}
 
 	# r = get_url(robots_cache)
-	r = get_url()
+	r = get_url() 
 	
 	if r is not None: 
 		# Start a fresh structured card CSV for this crawl.

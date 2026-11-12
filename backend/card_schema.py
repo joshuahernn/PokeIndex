@@ -1,6 +1,6 @@
 CARD_FIELDS = [
     'id', 'source_url', 'name', 'set', 'set_code', 'card_number',
-    'set_total', 'series', 'hp', 'types', 'stage', 'rarity', 'artist',
+    'set_total', 'series', 'hp', 'types', 'supertype', 'stage', 'subtype', 'rarity', 'artist',
     'weakness', 'resistance', 'retreat_cost', 'image_url', 'attacks',
     'card_text', 'warnings'
 ]

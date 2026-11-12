@@ -5,7 +5,6 @@ from card_schema import CARD_FIELDS, ENERGY
 
 
 def canonical_card_url(url):
-    # make sure the URL is from Limitless TCG
     parts = urlsplit(url)
 
     if parts.scheme not in {'http', 'https'}:
@@ -14,15 +13,26 @@ def canonical_card_url(url):
     if parts.hostname not in {'limitlesstcg.com', 'www.limitlesstcg.com'}:
         return None
 
-    # only accept individual card pages
-    if not re.fullmatch(r'/cards/[a-z]{2}/[A-Za-z0-9-]+/[A-Za-z0-9-]+/?', parts.path):
+    match = re.fullmatch(
+        r'/cards/(?:([a-z]{2})/)?([A-Za-z0-9-]+)/([A-Za-z0-9-]+)/?',
+        parts.path
+    )
+
+    if match is None:
         return None
 
-    # remove anything extra from the URL to avoid duplicates
-    path = parts.path.rstrip('/')
+    language, set_code, number = match.groups()
 
+    # '/cards/en/DLR' is a set listing, not a card
+    if language is None and re.fullmatch(r'[a-z]{2}', set_code):
+        return None
+
+    # English only for now
+    if language not in (None, 'en'):
+        return None
+
+    path = f'/cards/en/{set_code}/{number}'
     return urlunsplit(('https', 'limitlesstcg.com', path, '', ''))
-
 
 def parse_card(soup, url):
     # get the card information from the HTML page
@@ -90,11 +100,16 @@ def parse_card(soup, url):
 
     # get the Pokemon stage
     card_type = value('.card-text-type') or ''
-    type_parts = card_type.split(' - ')
+    type_parts = [clean(part) for part in card_type.split(' - ')]
+
+    if type_parts and type_parts[0]:
+        card['supertype'] = type_parts[0]
 
     if len(type_parts) > 1:
         if type_parts[0] == 'Pokémon':
             card['stage'] = clean(type_parts[1])
+        else:
+            card['subtype'] = clean(type_parts[1])
 
     # get the card set and set code
     set_text = value('.prints-current-details .text-lg') or ''
